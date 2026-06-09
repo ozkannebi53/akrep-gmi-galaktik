@@ -9,31 +9,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: npm install -g pnpm
-      - run: pnpm install
-      - run: npm install -g eas-cli
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
 
       - name: Build APK
-        run: |
-          eas build --platform android --profile preview --non-interactive
+        run: eas build --platform android --profile preview --non-interactive
         env:
           EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Download APK
-        run: |
-          eas build:list --platform android --non-interactive --json | jq -r '.[0].artifacts.buildUrl' > apk-url.txt
-        env:
-          EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: akrep-gmi-apk
-          path: apk-url.txt
